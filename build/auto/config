@@ -6,7 +6,6 @@ lb config noauto \
   --architectures amd64 \
   --binary-images iso-hybrid \
   --linux-flavours generic \
-  --debian-installer none \
   --iso-application "CodexyyOS" \
   --iso-volume "CODEXYYOS" \
   --iso-publisher "codexyy.dev" \

@@ -1,0 +1,36 @@
+name: discover-packages
+on: { workflow_dispatch: {} }
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debootstrap minimal noble chroot
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debootstrap
+          sudo debootstrap --variant=minbase noble /chroot http://archive.ubuntu.com/ubuntu
+      - name: Mount + add elementary PPA
+        run: |
+          sudo mount --bind /dev /chroot/dev
+          sudo mount --bind /proc /chroot/proc
+          sudo mount --bind /sys /chroot/sys
+          sudo chroot /chroot apt-get update
+          sudo chroot /chroot apt-get install -y software-properties-common gnupg curl ca-certificates
+          sudo chroot /chroot add-apt-repository -y ppa:elementaryos/stable
+          sudo chroot /chroot apt-get update
+      - name: Search for pantheon/elementary packages
+        run: |
+          echo "=== apt-cache search pantheon ==="
+          sudo chroot /chroot apt-cache search pantheon || true
+          echo "=== apt-cache search elementary ==="
+          sudo chroot /chroot apt-cache search elementary || true
+          echo "=== apt-cache search wingpanel ==="
+          sudo chroot /chroot apt-cache search wingpanel || true
+          echo "=== apt-cache search gala ==="
+          sudo chroot /chroot apt-cache search gala || true
+          echo "=== apt-cache search plank ==="
+          sudo chroot /chroot apt-cache search plank || true
+          echo "=== apt-cache search switchboard ==="
+          sudo chroot /chroot apt-cache search switchboard || true
+          echo "=== ppa source list ==="
+          cat /chroot/etc/apt/sources.list.d/*elementaryos*.list 2>/dev/null || true

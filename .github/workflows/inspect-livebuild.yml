@@ -1,0 +1,16 @@
+name: inspect-livebuild
+on: { workflow_dispatch: {} }
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install
+        run: sudo apt-get update && sudo apt-get install -y live-build syslinux-utils
+      - name: find binary.sh / isohybrid references
+        run: |
+          echo "=== dpkg -L live-build | grep -i binary ==="
+          dpkg -L live-build | grep -i binary | head -30
+          echo "=== grep isohybrid in live-build files ==="
+          grep -rl isohybrid /usr/share/live/build /usr/lib/live 2>/dev/null
+          echo "=== show relevant file(s) ==="
+          for f in $(grep -rl isohybrid /usr/share/live/build /usr/lib/live 2>/dev/null); do echo "--- $f ---"; cat "$f"; done

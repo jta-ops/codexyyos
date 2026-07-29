@@ -14,6 +14,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y live-build debootstrap xorriso squashfs-tools qemu-system-x86 qemu-utils syslinux-utils
+          echo "isohybrid location:"; command -v isohybrid; ls -la $(command -v isohybrid)
+          sudo command -v isohybrid || echo "NOT VISIBLE UNDER SUDO"
       - name: Fix /dev/kvm perms
         run: sudo chmod 666 /dev/kvm
       - name: lb config
@@ -24,7 +26,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          sudo lb build 2>&1 | tee build.log
+          sudo env "PATH=$PATH" lb build 2>&1 | tee build.log
       - name: Report result
         if: always()
         working-directory: build

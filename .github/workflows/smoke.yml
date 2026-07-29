@@ -4,9 +4,10 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: KVM check
+      - name: KVM check + fix perms
         run: |
           ls -la /dev/kvm
+          sudo chmod 666 /dev/kvm
           egrep -c "(vmx|svm)" /proc/cpuinfo || true
       - name: Disk check
         run: df -h /
@@ -17,9 +18,10 @@ jobs:
       - name: Version report
         run: |
           debootstrap --version
-          lb --version || dpkg -l live-build | tail -1
+          dpkg -l live-build | tail -1
           xorriso -version | head -1
           qemu-system-x86_64 --version
       - name: QEMU KVM smoke boot
         run: |
-          timeout 20 qemu-system-x86_64 -machine accel=kvm:tcg -m 512 -nographic -serial mon:stdio -kernel /boot/vmlinuz-$(uname -r) -append "console=ttyS0" -initrd /boot/initrd.img-$(uname -r) || echo "boot attempt finished (expected timeout/panic, we just want it to launch)"
+          sudo chmod 644 /boot/vmlinuz-$(uname -r) /boot/initrd.img-$(uname -r)
+          timeout 15 qemu-system-x86_64 -machine accel=kvm -m 512 -nographic -serial mon:stdio -kernel /boot/vmlinuz-$(uname -r) -append "console=ttyS0" -initrd /boot/initrd.img-$(uname -r) || echo "boot attempt finished rc=$?"

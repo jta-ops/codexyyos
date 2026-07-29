@@ -21,14 +21,18 @@ jobs:
         run: sudo lb config
       - name: lb build
         working-directory: build
-        run: sudo lb build 2>&1 | tee build.log
+        shell: bash
+        run: |
+          set -o pipefail
+          sudo lb build 2>&1 | tee build.log
       - name: Report result
+        if: always()
         working-directory: build
         run: |
           echo "=== ISO(s) produced ==="
           ls -lh *.iso 2>&1 || echo "NO ISO PRODUCED"
           echo "=== tail of build.log ==="
-          tail -100 build.log
+          tail -150 build.log
           df -h /
       - name: Upload build log
         if: always()

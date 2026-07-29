@@ -13,7 +13,7 @@ jobs:
       - name: Install live-build tooling
         run: |
           sudo apt-get update
-          sudo apt-get install -y live-build debootstrap xorriso squashfs-tools qemu-system-x86 qemu-utils
+          sudo apt-get install -y live-build debootstrap xorriso squashfs-tools qemu-system-x86 qemu-utils syslinux-utils
       - name: Fix /dev/kvm perms
         run: sudo chmod 666 /dev/kvm
       - name: lb config

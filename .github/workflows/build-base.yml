@@ -1,0 +1,63 @@
+name: build-base
+on: { workflow_dispatch: {} }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache
+          df -h /
+      - name: Install live-build tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y live-build debootstrap xorriso squashfs-tools qemu-system-x86 qemu-utils
+      - name: Fix /dev/kvm perms
+        run: sudo chmod 666 /dev/kvm
+      - name: lb config
+        working-directory: build
+        run: sudo lb config
+      - name: lb build
+        working-directory: build
+        run: sudo lb build 2>&1 | tee build.log
+      - name: Report result
+        working-directory: build
+        run: |
+          echo "=== ISO(s) produced ==="
+          ls -lh *.iso 2>&1 || echo "NO ISO PRODUCED"
+          echo "=== tail of build.log ==="
+          tail -100 build.log
+          df -h /
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build/build.log
+          retention-days: 7
+      - name: Boot-test ISO in QEMU
+        if: success()
+        working-directory: build
+        run: |
+          ISO=$(ls *.iso | head -1)
+          echo "Testing $ISO"
+          timeout 120 qemu-system-x86_64 -machine accel=kvm -m 3072 -smp 2 -cdrom "$ISO" -boot d -nographic -serial mon:stdio -display none > serial.log 2>&1 || true
+          echo "=== serial output (last 200 lines) ==="
+          tail -200 serial.log || true
+      - name: Upload serial log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: serial-log
+          path: build/serial.log
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload ISO
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codexyyos-base-iso
+          path: build/*.iso
+          retention-days: 14

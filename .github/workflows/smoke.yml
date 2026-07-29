@@ -1,0 +1,25 @@
+name: smoke-test
+on: { workflow_dispatch: {} }
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: KVM check
+        run: |
+          ls -la /dev/kvm
+          egrep -c "(vmx|svm)" /proc/cpuinfo || true
+      - name: Disk check
+        run: df -h /
+      - name: Install build tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debootstrap live-build xorriso mmdebstrap squashfs-tools qemu-system-x86 qemu-utils ovmf
+      - name: Version report
+        run: |
+          debootstrap --version
+          lb --version || dpkg -l live-build | tail -1
+          xorriso -version | head -1
+          qemu-system-x86_64 --version
+      - name: QEMU KVM smoke boot
+        run: |
+          timeout 20 qemu-system-x86_64 -machine accel=kvm:tcg -m 512 -nographic -serial mon:stdio -kernel /boot/vmlinuz-$(uname -r) -append "console=ttyS0" -initrd /boot/initrd.img-$(uname -r) || echo "boot attempt finished (expected timeout/panic, we just want it to launch)"

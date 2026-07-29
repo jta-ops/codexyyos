@@ -5,6 +5,7 @@ lb config noauto \
   --archive-areas "main restricted universe multiverse" \
   --architectures amd64 \
   --binary-images iso-hybrid \
+  --bootloaders "grub-pc grub-efi" \
   --linux-flavours generic \
   --iso-application "CodexyyOS" \
   --iso-volume "CODEXYYOS" \
